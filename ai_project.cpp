@@ -3,9 +3,12 @@
 #include <time.h>
 using namespace std;
 
-#define mapLength 100
+#define mapLength 26
 #define numOfParticles 50
 #define stepSize 1
+#define startPosition 1
+#define startDirection 1 // 0 means left and 1 means right
+#define numOfIteration 100
 
 //each array element has its own sensor value (which is a char)
 char map[mapLength];
@@ -21,39 +24,39 @@ struct Particle {
 Particle particles[numOfParticles];
 Particle selectedParticles[numOfParticles];
 
-//robot value reflects its position
-// int robot = robotPosition;
-
 struct Robot {
-    int robotPosition = 30;
-    int robotDirection = 1; //to right
+    int robotPosition = startPosition;
+    int robotDirection = startDirection; 
 } robot;
 
 
 void calcCumulativeWeights(){
-    // cout<<"\n\ntheir cumulative Weight: \n" ;
+    // cout<<"\n\ntheir weight and cumulative Weight: \n" ;
     for (int i = 1; i <= numOfParticles; i++)
     {
+        // cout<<"[w " << i << " , " << particles[i].weight << "]" <<" ";
         particles[i].cumulativeWeight = particles[i].weight;
         for (int j = 1; j < i; j++)
         {
             particles[i].cumulativeWeight += particles[j].weight;
         }
-        // cout<<"[" << i << " , " << particles[i].cumulativeWeight << "]" <<" ";
+        // cout<<"[cw " << i << " , " << particles[i].cumulativeWeight << "]" <<" ";
     }
-    cout << endl;
+    // cout << endl;
 }
 
 //inital values
 void setParticles(){
     for (int i = 1; i <= numOfParticles; i++)
     {
-        particles[i].position = rand() % 100 + 1;
+        particles[i].position = rand() % mapLength + 1;
         particles[i].direction = rand() %2; //Either 0 or 1
         particles[i].weight = 1.0/numOfParticles;
     }
-    calcCumulativeWeights();
+
+    // calcCumulativeWeights();
 }
+
 
 void printParticlesDetails(){
     cout << "particles positions: ";
@@ -67,7 +70,7 @@ void printParticlesDetails(){
     {
         cout <<particles[i].direction << " ";
     }
-    cout << endl;
+    cout << endl<<endl;
     cout << "particles weights: ";
     for (int i = 1; i <= numOfParticles; i++)
     {
@@ -79,13 +82,17 @@ void printParticlesDetails(){
 //i used charachter as sensor value
 void setMap(){
     printParticlesDetails();
+    char m = 'A';
     for (int i = 1; i <= mapLength; i++)
     {
-        map[i] = (rand() % 26) + 'A'; 
+        // map[i] = (rand() % 26) + 'A'; 
+        map[i] = m;
+        m++;
     }    
 }
 
 void printMap(){
+    printParticlesDetails();
     for (int i = 1; i <= mapLength; i++)
     {
         cout << map[i] << "  " << "|" << " ";
@@ -126,6 +133,15 @@ void printMap(){
     cout << endl << endl << endl;
 }
 
+void printselectedParticles(){
+    cout << "\n\nweights of selected particles:"<< endl;
+    for (int i = 1; i <= numOfParticles; i++)
+    {
+        cout<<selectedParticles[i].weight<<" ";
+    }
+    cout << endl << endl;
+}
+
 void particleFilter(){
     calcCumulativeWeights();
     int sumOfWeights = 0;
@@ -145,7 +161,6 @@ void particleFilter(){
                 break;
             }
         }
-        // printselectedParticles(); /////////
 
         //2. update position
         // rotate the particle if needed
@@ -166,11 +181,14 @@ void particleFilter(){
         }
 
         //3. update weight
-        selectedParticles[i].weight = 26 -abs(map[robot.robotPosition] - map[selectedParticles[i].position]);
-        // cout<<"selected weight: "<<selectedParticles[i].weight<<endl;
+        // selectedParticles[i].weight = 26 - abs(map[robot.robotPosition] - map[selectedParticles[i].position]);
+        selectedParticles[i].weight = 26 - abs(map[robot.robotPosition] - map[selectedParticles[i].position]);
+        
+        cout<<"selected weight: "<<map[robot.robotPosition]<< "," <<map[selectedParticles[i].position]<< "," << selectedParticles[i].weight <<"  ";
         sumOfWeights += selectedParticles[i].weight;
     }
-            cout <<endl;
+
+    cout <<endl;
 
     //4. normalized weight
     for (int i = 1; i <= numOfParticles; i++)
@@ -179,20 +197,23 @@ void particleFilter(){
         // cout<<"selected norm weight: "<<selectedParticles[i].weight<<endl;
     }
     
+    // printselectedParticles(); 
+
     //5. set the new selectedParticles[] as particles[] 
     for (int i = 1; i <= numOfParticles; i++)
     {
         particles[i] = selectedParticles[i];
     }
     
+
     
 }
 
 void move(){
     if ((robot.robotPosition == mapLength && robot.robotDirection == 1) || (robot.robotPosition == 1 && robot.robotDirection == 0))
     {
-        cout << robot.robotPosition << ", " << robot.robotDirection << endl;
-        cout<< "bbb" <<endl;
+        // cout << robot.robotPosition << ", " << robot.robotDirection << endl;
+        // cout<< "bbb" <<endl;
         if (robot.robotDirection == 1)        
             robot.robotDirection = 0; // Move it's direction to left
         else
@@ -207,7 +228,8 @@ void move(){
             else
                 particles[i].direction = 0;
         }
-                cout << robot.robotPosition << ", " << robot.robotDirection << endl;
+
+        // cout << robot.robotPosition << ", " << robot.robotDirection << endl;
 
     }
 
@@ -221,13 +243,6 @@ void move(){
 
 }
 
-void printselectedParticles(){
-    cout << "\n\nweights of selected particles:"<< endl;
-    for (int i = 1; i <= numOfParticles; i++)
-    {
-        cout<<selectedParticles[i].weight<<" ";
-    }
-}
 
 void printOutput(){
     double mean = 0, standardDeviation = 0;
@@ -259,7 +274,7 @@ int main(){
 
     //after move => printMap
     int i = 0;
-    while (i<100)
+    while (i<numOfIteration)
     {
         move();
         printMap();
