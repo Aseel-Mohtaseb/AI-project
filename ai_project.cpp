@@ -1,14 +1,17 @@
+//edit setMap()
+// numOfParticles 1000 numOfIteration 1000
+
 #include <iostream>
 #include <cmath>
 #include <time.h>
 using namespace std;
 
-#define mapLength 26
-#define numOfParticles 50
+#define mapLength 100
+#define numOfParticles 150
 #define stepSize 1
-#define startPosition 1
+#define startPosition 10
 #define startDirection 1 // 0 means left and 1 means right
-#define numOfIteration 100
+#define numOfIteration 1000
 
 //each array element has its own sensor value (which is a char)
 char map[mapLength];
@@ -31,18 +34,18 @@ struct Robot {
 
 
 void calcCumulativeWeights(){
-    // cout<<"\n\ntheir weight and cumulative Weight: \n" ;
+    cout<<"\n\ntheir weight and cumulative Weight: \n" ;
     for (int i = 1; i <= numOfParticles; i++)
     {
-        // cout<<"[w " << i << " , " << particles[i].weight << "]" <<" ";
+        cout<<"[w " << i << " , " << particles[i].weight << "]" <<" ";
         particles[i].cumulativeWeight = particles[i].weight;
         for (int j = 1; j < i; j++)
         {
             particles[i].cumulativeWeight += particles[j].weight;
         }
-        // cout<<"[cw " << i << " , " << particles[i].cumulativeWeight << "]" <<" ";
+        cout<<"[cw " << i << " , " << particles[i].cumulativeWeight << "]" <<" ";
     }
-    // cout << endl;
+    cout << endl;
 }
 
 //inital values
@@ -51,7 +54,15 @@ void setParticles(){
     {
         particles[i].position = rand() % mapLength + 1;
         particles[i].direction = rand() %2; //Either 0 or 1
+        // particles[i].direction = 1; //just 1
         particles[i].weight = 1.0/numOfParticles;
+    }
+
+/////////////////////////////////////////////////
+     for (int i = 1; i <= 100; i++)
+    {
+        particles[i].position = i;
+        
     }
 
     // calcCumulativeWeights();
@@ -70,7 +81,7 @@ void printParticlesDetails(){
     {
         cout <<particles[i].direction << " ";
     }
-    cout << endl<<endl;
+    cout << endl;
     cout << "particles weights: ";
     for (int i = 1; i <= numOfParticles; i++)
     {
@@ -81,14 +92,58 @@ void printParticlesDetails(){
 }
 //i used charachter as sensor value
 void setMap(){
-    printParticlesDetails();
+    // // char m = 'A';
+    // for (int i = 1; i <= mapLength; i++)
+    // {
+    //     map[i] = (rand() % 26) + 'A'; 
+    //     // map[i] = m;
+    //     // m++;
+    // }    
+
     char m = 'A';
-    for (int i = 1; i <= mapLength; i++)
-    {
-        // map[i] = (rand() % 26) + 'A'; 
+    int i = 1;
+    for (i; i <= mapLength; i++)
+    {        
         map[i] = m;
+        if (m == 'Z')
+        {
+            break;
+        }
         m++;
-    }    
+        
+    }   
+    for (i; i <= mapLength; i++)
+    {        
+        map[i] = m;
+        if (m == 'A')
+        {
+            break;
+        }
+        m--;
+        
+    } 
+    for (i; i <= mapLength; i++)
+    {        
+        map[i] = m;
+        if (m == 'Z')
+        {
+            break;
+        }
+        m++;
+        
+    }   
+    for (i; i <= mapLength; i++)
+    {        
+        map[i] = m;
+        if (m == 'A')
+        {
+            break;
+        }
+        m--;
+        
+    } 
+ 
+   
 }
 
 void printMap(){
@@ -146,13 +201,12 @@ void particleFilter(){
     calcCumulativeWeights();
     int sumOfWeights = 0;
     // Random numbers generated between 0 and 1:
-    // srand( (unsigned)time( NULL ) );
     double randNum;
-    // cout<<"\n\nrandom numbers generated: "<<endl;
+    cout<<"\n\nrandom numbers generated: "<<endl;
     for (int i = 1; i <= numOfParticles; i++)
     {
         randNum = (double) rand()/RAND_MAX;
-        // cout<<randNum<<" ";
+        cout<<randNum<<" ";
         for (int j = 1; j <= numOfParticles; j++)
         {
             //1. select particle
@@ -244,7 +298,7 @@ void move(){
 }
 
 
-void printOutput(){
+int printOutput(){
     double mean = 0, standardDeviation = 0;
     for (int i = 1; i <= numOfParticles; i++)
     {
@@ -262,30 +316,29 @@ void printOutput(){
     
     cout << "Robot position: " << robot.robotPosition << "\t Mean: " << mean << "\t Standard deviation: "  << standardDeviation << endl << endl;
 
+    if (standardDeviation == 0)
+        return 1;
+    else
+        return 0;
+    
 }
 
 int main(){
     srand( (unsigned)time( NULL ) );
-
     setParticles();
     setMap();
     printMap();
     printOutput();
 
-    //after move => printMap
     int i = 0;
     while (i<numOfIteration)
     {
+        cout << "-----------------------------------------------------------------------"<<endl;
         move();
         printMap();
-        printOutput();
+        if(printOutput())
+            return 0;
         i++;
-        // cout<<particles[5].weight<<" "<<particles[5].position<<" "<<particles[5].direction<<" "<<particles[5].cumulativeWeight;
     }
-    
-    
-
-    // particlesWeight();
-
     return 0;
 }
